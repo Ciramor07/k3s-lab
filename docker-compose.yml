@@ -1,0 +1,38 @@
+services:
+
+  # --- Base de données PostgreSQL ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: items-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: itemsdb
+    ports:
+      - "5432:5432"
+    volumes:
+    # Persistance des données entre les redémarrages
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+    # Vérifie que PostgreSQL est prêt à accepter des connexions
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# --- API Python ---
+  api:
+    build: .
+    container_name: items-api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/itemsdb"
+    depends_on:
+      postgres:
+        # Attend que PostgreSQL soit vraiment prêt (healthcheck OK)
+        condition: service_healthy
+
+# Volume nommé pour persister les données PostgreSQL
+volumes:
+  postgres-data:
