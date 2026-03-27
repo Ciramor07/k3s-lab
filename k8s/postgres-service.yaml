@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: items-app
+spec:
+  selector:
+    app: postgres    # Pointe vers les Pods avec le label app=postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP    # Accessible uniquement dans le cluster
