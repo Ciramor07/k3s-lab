@@ -1,6 +1,5 @@
 name: CI - Build and Push Docker Image
 
-# Se déclenche à chaque push sur la branche main
 on:
   push:
     branches:
@@ -9,65 +8,34 @@ on:
 jobs:
   build-and-push:
     name: Build and Push to Docker Hub
-    runs-on: ubuntu-latest  # GitHub fournit une VM Ubuntu gratuite
+    runs-on: ubuntu-latest
 
     steps:
-      # Étape 1 : Récupère le code du repo
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Étape 2 : Configure Docker Buildx
-      # Buildx = version améliorée de docker build
-      # Permet de builder pour plusieurs architectures (amd64, arm64)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Étape 3 : Connexion à Docker Hub
-      # Utilise les secrets qu'on a configurés dans GitHub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Étape 4 : Build et Push de l'image
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # Tag avec le SHA du commit pour traçabilité
-          # Ex: tonusername/items-api:abc1234
-          #     tonusername/items-api:latest
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/items-api:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/items-api:${{ github.sha }}
-          # Cache les layers Docker entre les builds
-          # → builds suivants beaucoup plus rapides
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Étape 5 : Résumé du build
       - name: Summary
         run: |
           echo "Image pushed successfully !"
           echo "Image : ${{ secrets.DOCKERHUB_USERNAME }}/items-api:latest"
           echo "Commit : ${{ github.sha }}"
-```
-
----
-
-### Ce que fait chaque étape
-```
-checkout    → télécharge ton code sur la VM GitHub
-buildx      → prépare Docker pour builder
-login       → se connecte à Docker Hub avec tes secrets
-build-push  → build l'image et la pousse sur Docker Hub
-summary     → affiche un résumé dans l'interface GitHub
-```
-
-### Pourquoi deux tags ?
-```
-items-api:latest      → toujours la dernière version
-items-api:abc1234     → version précise liée à un commit
-                        → si latest bug, tu peux revenir à abc1234
