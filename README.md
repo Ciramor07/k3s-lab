@@ -213,7 +213,6 @@ C'est le standard pour le développement local multi-conteneurs.
 
 ## Ce que j'aurais fait avec plus de temps
 
-- **Migrations Alembic** plutôt que `create_all` au démarrage
 - **Ingress NGINX** plutôt que NodePort pour l'exposition
 - **Sealed Secrets** pour les credentials Kubernetes
 - **Tests unitaires** avec pytest
